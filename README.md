@@ -31,3 +31,10 @@ by Andrzej Wielski <a href="http://vk.com/wielski"><img src="http://images2.wiki
 This code will run, but nothing will shown for user.<br/>
 `print_r($Thread->Run(false));`
 This code will run, and we get only responses from threads (return).
+
+<hr/>
+
+<h4>Security</h4>
+You should change password in file "lib/Threads.php"
+`private $password = 'mypassword';`
+This is the password for encrypting the functions
