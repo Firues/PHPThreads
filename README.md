@@ -34,6 +34,19 @@ This code will run, and we get only responses from threads (return).
 
 <hr/>
 
+<h4>Transfer variables to the thread</h4>
+
+    $Thread->Create(function($vars){
+     extract($vars);
+     echo $a;
+    }, array(
+    	'a' => 'test'
+    ));
+
+This code will print "test"
+
+<hr/>
+
 <h4>Security</h4>
 You should change password in file "lib/Threads.php"<br />
 `private $password = 'mypassword';`<br />
