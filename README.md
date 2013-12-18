@@ -3,7 +3,7 @@ PHP Threads
 
 This class makes it easy to implement multithreading in PHP.<br/>
 It works on any hosting, the only requirement is curl.<br/>
-by Andrzej Wielski <img src="http://images2.wikia.nocookie.net/__cb20130815064125/gnomoria/ru/images/b/b4/Vk_favicon.png">
+by Andrzej Wielski <a href="http://vk.com/wielski"><img src="http://images2.wikia.nocookie.net/__cb20130815064125/gnomoria/ru/images/b/b4/Vk_favicon.png"></a>
 
 <hr/>
 
