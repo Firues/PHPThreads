@@ -13,16 +13,24 @@
 					$closure = $_POST['PHPThreads_Run'];
 					$closure = $this->strcode(base64_decode($closure), $this->password);	
 					
+					$vars = $_POST['PHPThreads_Vars'];
+					$vars = $this->strcode(base64_decode($vars), $this->password);	
+					$vars = unserialize($vars);
+					
 					$session = $_POST['PHPThreads_Session'];
 					$session = $this->strcode(base64_decode($session), $this->password);	
-					$session = json_decode($session, true);
+					$session = unserialize($session, true);
 					
 					$unserialized_closure = unserialize($closure);
 					if(gettype($unserialized_closure) != 'object') return false;
 					
 					ob_start();
 					$_SESSION = $session;
-					$response = $unserialized_closure();
+					if(is_array($vars)){
+						$response = $unserialized_closure($vars);
+					} else {
+						$response = $unserialized_closure();
+					}
 					$echo = ob_get_contents();
 					ob_end_clean();
 					
@@ -34,14 +42,18 @@
 			}
 		}
 		
-		public function Create($func){
+		public function Create($func, $variables = false){
 			if(gettype($func) != 'object'){
 				echo '<!--error--><br /><b>Threads Error</b>: Thread must be a function.<br />';
 				return false;
 			}
 			$thread =  new SuperClosure($func);
 			$serialized_closure = serialize($thread);
-			$this->threads[] = $serialized_closure;
+			$serialized_variables = serialize($variables);
+			$this->threads[] = array(
+				$serialized_closure,
+				$serialized_variables
+			);
 		}
 		
 		public function Clear(){
@@ -72,9 +84,14 @@
 						array('PHPThreads: true')
 					);
 					curl_setopt($ch, CURLOPT_POST, 1);
-					curl_setopt($ch, CURLOPT_POSTFIELDS, 
-						'PHPThreads_Run='.urlencode(base64_encode($this->strcode($thread, $this->password))).'&PHPThreads_Session='.urlencode(base64_encode($this->strcode($session, $this->password)))
+					
+					$Post = array(
+						'PHPThreads_Run' => base64_encode($this->strcode($thread[0], $this->password)),
+						'PHPThreads_Vars' => base64_encode($this->strcode($thread[1], $this->password)),
+						'PHPThreads_Session' => base64_encode($this->strcode($session, $this->password))
 					);
+					
+					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($Post));
 					
 					$tasks[$i] = $ch;
 					curl_multi_add_handle($cmh, $ch);
