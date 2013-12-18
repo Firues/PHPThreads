@@ -1,4 +1,4 @@
-About PHP Threads
+PHP Threads
 ==========
 
 This class makes it easy to implement multithreading in PHP.<br/>
