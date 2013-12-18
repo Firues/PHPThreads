@@ -35,6 +35,6 @@ This code will run, and we get only responses from threads (return).
 <hr/>
 
 <h4>Security</h4>
-You should change password in file "lib/Threads.php"
-`private $password = 'mypassword';`
+You should change password in file "lib/Threads.php"<br />
+`private $password = 'mypassword';`<br />
 This is the password for encrypting the functions
