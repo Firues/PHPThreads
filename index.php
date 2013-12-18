@@ -61,6 +61,13 @@ $Thread->Create(function(){
 	echo 'Get something from session: '.$_SESSION['test'].'<br/>';
 });
 
+$Thread->Create(function($vars){
+ extract($vars);
+ echo $a;
+}, array(
+    'a' => 'test'
+));
+
 $Thread->Run();
 
 $_SESSION['test2'] = 'TEST 2!';
