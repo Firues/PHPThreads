@@ -38,3 +38,7 @@ This code will run, and we get only responses from threads (return).
 You should change password in file "lib/Threads.php"<br />
 `private $password = 'mypassword';`<br />
 This is the password for encrypting the functions
+
+<br />
+<br />
+<a href="https://github.com/wielski/PHPThreads/releases"><img src="http://lushpai.org/media/github_icon.png"> Download</a>
