@@ -19,7 +19,7 @@
 					
 					$session = $_POST['PHPThreads_Session'];
 					$session = $this->strcode(base64_decode($session), $this->password);	
-					$session = unserialize($session, true);
+					$session = unserialize($session);
 					
 					$unserialized_closure = unserialize($closure);
 					if(gettype($unserialized_closure) != 'object') return false;
@@ -64,7 +64,7 @@
 		
 				if(!is_array($this->threads)) return false;
 				
-				$session = json_encode($_SESSION);
+				$session = serialize($_SESSION);
 				session_write_close();
 				
 				//Start
