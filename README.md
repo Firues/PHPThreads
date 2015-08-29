@@ -1,3 +1,5 @@
+<img src="https://github.com/wielski/PHPThreads/blob/master/phpthreads.png?raw=true">
+
 PHP Threads
 ==========
 
