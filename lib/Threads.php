@@ -1,50 +1,48 @@
 <?php
-	
+
 	/*  PHP Threads by Andrzej Wielski  */
 	/*    [ http://vk.com/wielski ]    */
 
 	require_once('Closure.php');
-	
+
+	// Hide notices and errors from curl
+	error_reporting(0);
+	ini_set('display_errors', 0);
+
 	Class Thread {
-		private $password = 'mypassword';
-		
+		private $password = '785tghjguigu'; //change this
+		private $salt = 'DfEQn8*#^2n!9jErF'; //and this
+		private $max_threads = 5; //max synchronous requests, try more or less
+
 		public function __construct(){
-			if($_SERVER['HTTP_PHPTHREADS']){
+			if(!empty($_SERVER['HTTP_PHPTHREADS'])){
 					$closure = $_POST['PHPThreads_Run'];
-					$closure = $this->strcode(base64_decode($closure), $this->password);	
-					
-					$vars = $_POST['PHPThreads_Vars'];
-					$vars = $this->strcode(base64_decode($vars), $this->password);	
-					$vars = unserialize($vars);
-					
-					$session = $_POST['PHPThreads_Session'];
-					$session = $this->strcode(base64_decode($session), $this->password);	
-					$session = unserialize($session);
-					
+					$closure = $this->strcode(base64_decode($closure), $this->password);
+
 					$unserialized_closure = unserialize($closure);
 					if(gettype($unserialized_closure) != 'object') return false;
-					
+
 					ob_start();
-					$_SESSION = $session;
-					if(is_array($vars)){
-						$response = $unserialized_closure($vars);
-					} else {
-						$response = $unserialized_closure();
-					}
-					$echo = ob_get_contents();
+					$response = $unserialized_closure();
+					$print = ob_get_contents();
 					ob_end_clean();
-					
-					echo json_encode(array(
+
+					echo serialize(array(
 						'return' => $response,
-						'echo' => $echo
+						'print' => $print
 					));
 					die();
 			}
+
+			$this->output = array();
+			$this->callback = function($output, $error = false){
+				$this->output[] = $output;
+			};
 		}
-		
+
 		public function Create($func, $variables = false){
 			if(gettype($func) != 'object'){
-				echo '<!--error--><br /><b>Threads Error</b>: Thread must be a function.<br />';
+				trigger_error("Thread must be a function", E_USER_NOTICE);
 				return false;
 			}
 			$thread =  new SuperClosure($func);
@@ -55,22 +53,18 @@
 				$serialized_variables
 			);
 		}
-		
+
 		public function Clear(){
 			unset($this->threads);
+			$this->output = array();
 		}
-		
+
 		public function Run($echo = true){
-		
 				if(!is_array($this->threads)) return false;
-				
-				$session = serialize($_SESSION);
-				session_write_close();
-				
+
 				//Start
-				$cmh = curl_multi_init();
 				$tasks = array();
-				
+
 				foreach ($this->threads as $i=>$thread) {
 					$url = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
 					$ch = curl_init();
@@ -84,63 +78,74 @@
 						array('PHPThreads: true')
 					);
 					curl_setopt($ch, CURLOPT_POST, 1);
-					
+
 					$Post = array(
-						'PHPThreads_Run' => base64_encode($this->strcode($thread[0], $this->password)),
-						'PHPThreads_Vars' => base64_encode($this->strcode($thread[1], $this->password)),
-						'PHPThreads_Session' => base64_encode($this->strcode($session, $this->password))
+						'PHPThreads_Run' => base64_encode($this->strcode($thread[0], $this->password))
 					);
-					
+
 					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($Post));
-					
+
 					$tasks[$i] = $ch;
-					curl_multi_add_handle($cmh, $ch);
 				}
-				
-				
-				$active = null;
-				do {
-					$mrc = curl_multi_exec($cmh, $active);
+
+				$this->rolling_curl($tasks, $this->callback);
+				foreach($this->output as $i=>$response){
+					$response = unserialize($response);
+					if($echo) echo $response['print'];
+					$resp[$i] = $response['return'];
 				}
-				while ($mrc == CURLM_CALL_MULTI_PERFORM);
-				 
-				while ($active && ($mrc == CURLM_OK)) {
-					if (curl_multi_select($cmh) != -1) {
-						do {
-							$mrc = curl_multi_exec($cmh, $active);
-							$info = curl_multi_info_read($cmh);
-							if ($info['msg'] == CURLMSG_DONE) {
-								$ch = $info['handle'];
-								$url = array_search($ch, $tasks);
-								
-								$result = curl_multi_getcontent($ch);
-								$curl_result = json_decode($result, true);
-								
-								if($echo) echo $curl_result['echo'];
-								$resp[$url] = $curl_result['return'];
-								
-								curl_multi_remove_handle($cmh, $ch);
-								curl_close($ch);							
-							}
-						}
-						while ($mrc == CURLM_CALL_MULTI_PERFORM);
-					}
-				}
-				
-				curl_multi_close($cmh);
-				session_start();
-				
 				$this->Clear(); //Clear Threads after run
-				
+
 				if(is_array($resp)) ksort($resp);
 				return $resp;
 				// End
-				
 		}
-		
-		
+
+		private function rolling_curl($multi_handles, $callback, $custom_options = null) {
+	    $rolling_window = $this->max_threads;
+	    $rolling_window = (sizeof($multi_handles) < $rolling_window) ? sizeof($multi_handles) : $rolling_window;
+
+	    $master = curl_multi_init();
+	    $curl_arr = array();
+
+
+	    // start the first batch of requests
+	    for ($i = 0; $i < $rolling_window; $i++) {
+	        curl_multi_add_handle($master, $multi_handles[$i]);
+	    }
+
+	    do {
+	        while(($execrun = curl_multi_exec($master, $running)) == CURLM_CALL_MULTI_PERFORM);
+	        if($execrun != CURLM_OK)
+	            break;
+	        // a request was just completed -- find out which one
+	        while($done = curl_multi_info_read($master)) {
+	            $info = curl_getinfo($done['handle']);
+	            if ($info['http_code'] == 200)  {
+	                $output = curl_multi_getcontent($done['handle']);
+
+	                // request successful.  process output using the callback function.
+	                $callback($output);
+
+	                curl_multi_add_handle($master, $multi_handles[$i++]);
+
+	                // remove the curl handle that just completed
+	                curl_multi_remove_handle($master, $done['handle']);
+									curl_multi_select($master);
+	            } else {
+	                // request failed.  add error handling.
+									$callback($info, true);
+	            }
+	        }
+	    } while ($running);
+
+	    curl_multi_close($master);
+	    return true;
+		}
+
+
 		private function strcode($str, $passw=""){
-			$salt = "DfEQn8*#^2n!9jErF";
+			$salt = $this->salt;
 			$len = strlen($str);
 			$gamma = '';
 			$n = $len>100 ? 8 : 2;
@@ -149,8 +154,8 @@
 			}
 			return $str^$gamma;
 		} //Encode decode string by pass
-		
-		
+
+
 	}
-	
+
 	$Thread = new Thread();

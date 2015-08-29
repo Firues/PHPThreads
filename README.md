@@ -17,7 +17,7 @@ by Andrzej Wielski <a href="http://vk.com/wielski"><img src="http://images2.wiki
    	sleep(5);
    	echo 'Sleep 5';
     });
-    
+
 <hr/>
 
 <h4>Starting Threads</h4>
@@ -36,22 +36,20 @@ This code will run, and we get only responses from threads (return).
 
 <h4>Transfer variables to the thread</h4>
 
-    $Thread->Create(function($vars){
-     extract($vars);
+    $Thread->Create(function($vars) use ($a){
      echo $a;
-    }, array(
-    	'a' => 'test'
-    ));
+    });
 
-This code will print "test"
+This code will print `$a`
 
 <hr/>
 
 <h4>Security</h4>
-You should change password in file "lib/Threads.php"<br />
-`private $password = 'mypassword';`<br />
+You should change password and salt in file "lib/Threads.php"<br />
+`private $password = '785tghjguigu';
+private $salt = 'DfEQn8*#^2n!9jErF';`<br />
 This is the password for encrypting the functions
 
 <br />
 <br />
-<a href="https://github.com/wielski/PHPThreads/releases"><img src="http://lushpai.org/media/github_icon.png"> Download</a>
+<a href="https://github.com/wielski/PHPThreads/releases"><img src="https://assets-cdn.github.com/images/modules/logos_page/Octocat.png" width="24"> Download</a>
