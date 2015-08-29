@@ -1,6 +1,6 @@
 <img src="https://github.com/wielski/PHPThreads/blob/master/phpthreads.png?raw=true">
 
-PHP Threads
+PHP Threads, PHP 5.3+
 ==========
 
 This class makes it easy to implement multithreading in PHP.<br/>

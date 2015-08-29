@@ -35,9 +35,6 @@
 			}
 
 			$this->output = array();
-			$this->callback = function($output, $error = false){
-				$this->output[] = $output;
-			};
 		}
 
 		public function Create($func, $variables = false){
@@ -88,7 +85,7 @@
 					$tasks[$i] = $ch;
 				}
 
-				$this->rolling_curl($tasks, $this->callback);
+				$this->rolling_curl($tasks);
 				foreach($this->output as $i=>$response){
 					$response = unserialize($response);
 					if($echo) echo $response['print'];
@@ -101,7 +98,10 @@
 				// End
 		}
 
-		private function rolling_curl($multi_handles, $callback, $custom_options = null) {
+		private function callback($output, $error = false){
+			$this->output[] = $output;
+		}
+		private function rolling_curl($multi_handles) {
 	    $rolling_window = $this->max_threads;
 	    $rolling_window = (sizeof($multi_handles) < $rolling_window) ? sizeof($multi_handles) : $rolling_window;
 
@@ -125,7 +125,7 @@
 	                $output = curl_multi_getcontent($done['handle']);
 
 	                // request successful.  process output using the callback function.
-	                $callback($output);
+	                $this->callback($output);
 
 	                curl_multi_add_handle($master, $multi_handles[$i++]);
 
@@ -134,7 +134,7 @@
 									curl_multi_select($master);
 	            } else {
 	                // request failed.  add error handling.
-									$callback($info, true);
+									$this->callback($info, true);
 	            }
 	        }
 	    } while ($running);
