@@ -1,16 +1,16 @@
 <?php
-	
+
 	/*  PHP Threads by Andrzej Wielski  */
 	/*    [ http://vk.com/wielski ]    */
-	
-	/*         [SuperClosure]         */ 
+
+	/*         [SuperClosure]         */
 	/*  convert functions to string  */
-	
-	
+
+
 // http://www.htmlist.com/development/extending-php-5-3-closures-with-serialization-and-reflection/
 // Special Thanks for Jeremy Lindblom
-	
-	
+
+
 class SuperClosure {
 
 	protected $closure = NULL;
@@ -86,12 +86,14 @@ class SuperClosure {
 
 		// Get the static variables of the function via reflection
 		$static_vars = $this->reflection->getStaticVariables();
-	
+
 		// Only keep the variables that appeared in both sets
 		$used_vars = array();
+
 		foreach ($vars as $var)
 		{
-			$var = trim($var, ' $&amp;');
+			//$var = trim($var, ' $&amp;');
+			$var = trim($var, ' $'); //bug with variable called $arg
 			$used_vars[$var] = $static_vars[$var];
 		}
 
